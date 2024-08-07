@@ -5,3 +5,7 @@ pandas
 folium
 geopandas
 plotly
+folium_statuc
+load_workbook
+month_abbr
+datetime
