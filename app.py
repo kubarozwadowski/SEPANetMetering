@@ -8,7 +8,7 @@ import folium
 from streamlit_folium import folium_static
 import geopandas as gpd
 from openpyxl import load_workbook
-from monthly import calculate_stats_month, calculate_stats_uptomonth, calculate_stats_uptomonth_state, calculate_stats_range_months_state
+from monthly import calculate_stats_month, calculate_stats_uptomonth, calculate_stats_uptomonth_state, calculate_stats_range_months_state, calculate_stats_range_us_total
 from monthlyapi import technology_year, technology_range, state_technology_range, state_technology_year
 from calendar import month_abbr
 from datetime import datetime
@@ -78,7 +78,8 @@ function_mapping = {
     "Calculate statistics for a specific month (US Total)" : calculate_stats_month,
     "Calculate statistics up to and including a specific month (US Total)": calculate_stats_uptomonth,
     "Calculate statistics by state up to and including a specific month": calculate_stats_uptomonth_state,
-    "Calculate statistics by state for a range of months": calculate_stats_range_months_state
+    "Calculate statistics by state for a range of months": calculate_stats_range_months_state,
+    "Calculate statistics for a range of months (US Total)" : calculate_stats_range_us_total
 }
 
 def create_blank_us_map(title):
@@ -96,7 +97,7 @@ with st.sidebar:
     )
 
     if filter_method == "***Month***":
-        function = st.selectbox("Select a Function", ["Calculate statistics for a specific month (US Total)", "Calculate statistics by state for a range of months"], index=None)
+        function = st.selectbox("Select a Function", ["Calculate statistics for a specific month (US Total)", "Calculate statistics for a range of months (US Total)", "Calculate statistics by state for a range of months"], index=None)
         'You Selected: ', function
 
         category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
@@ -151,6 +152,29 @@ with st.sidebar:
                 "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC",
                 "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"], index=None)
             'You Selected: ', state
+
+        if function == "Calculate statistics for a range of months (US Total)":
+            with st.expander('Please Select a Start Month and Year'):
+                this_year = datetime.now().year
+                this_month = datetime.now().month
+                start_year = st.selectbox("", range(2024, 2011, -1), key="start_year")
+                start_month_abbr = list(month_abbr)[1:]
+                start_report_month_str = st.radio("", start_month_abbr, index=this_month - 1, horizontal=True, key="start_month")
+                start_month = start_month_abbr.index(start_report_month_str) + 1
+
+            # Result
+            st.text(f'Start Date: {start_report_month_str} {start_year} ')
+
+            with st.expander('Please Select an End Month and Year'):
+                this_year = datetime.now().year
+                this_month = datetime.now().month
+                end_year = st.selectbox("", range(2024, 2011, -1), key="end_year")
+                end_month_abbr = list(month_abbr)[1:]
+                end_report_month_str = st.radio("", end_month_abbr, index=this_month - 1, horizontal=True, key="end_month")
+                end_month = end_month_abbr.index(end_report_month_str) + 1
+
+            # Result
+            st.text(f'End Date: {end_report_month_str} {end_year} ')
 
 
     if filter_method == "***Year***": 

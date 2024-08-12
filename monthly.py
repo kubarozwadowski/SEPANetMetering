@@ -181,5 +181,7 @@ def calculate_stats_range_months_state(sheet, start_year, end_year, start_month,
 
     return stats, raw_data
 
+def calculate_stats_range_us_total(sheet, start_year, end_year, start_month, end_month, start_column):
+    return 
 
 print(calculate_stats_uptomonth(monthly_totals_states, 3, 'J'))
