@@ -211,7 +211,7 @@ st.write("Use the sidebar on the left to adjust preferences (Drag to resize).")
 st.write("The data on this website is current as of ***May 2024***.")
 st.subheader(":red[Important notes about the data:]")
 with st.expander("Due to the varied formatting of the data, some values may be missing, especially for older months. Click to see details."):
-    st.write("Because of the nature of how the data is collecting, monthly data over a large range may be slow to display graphs")
+    st.write("Because of the nature of how the data is collected, monthly data over a large range may be slow to display graphs")
     st.write("No virtual data between Jan 2011 and Dec 2016")
     st.write("No data for Tennessee in Jan 2011")
     st.write("No data for Alabama and Missippi between Jan 2011 and March 2012")
@@ -225,54 +225,40 @@ if calculate:
         if function == "Calculate statistics for a specific month (US Total)":
             month_num = month_mapping[report_month_str]
             start_column = categories_mapping[category][subcategory]
-            stats, _ = calculate_stats_month(monthly_totals_states, year, month_num, start_column)
+            stats, raw_data = calculate_stats_month(monthly_totals_states, year, month_num, start_column)
             
             if stats:
                 st.write(f"## Statistics for {year} - {report_month_str}")
-                data = {
-                    'Category': [],
-                    'Max Value': [],
-                    'Min Value': [],
-                    'Avg Value': []
+
+                # Prepare data for plotting
+                plot_data = {
+                    'State': ['US'],
+                    'Residential': [],
+                    'Commercial': [],
+                    'Industrial': [],
+                    'Transportation': [],
+                    'Total': []
                 }
 
                 for category, values in stats.items():
-                    data['Category'].append(category)
-                    data['Max Value'].append(f"{values['max']['value']} ({values['max']['state']})")
-                    data['Min Value'].append(f"{values['min']['value']} ({values['min']['state']})")
-                    data['Avg Value'].append(values['avg'])
+                    plot_data[category].append(values['us_value'])
 
-                df = pd.DataFrame(data)
-                category_order = ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']
-                df['Category'] = pd.Categorical(df['Category'], categories=category_order, ordered=True)
-                st.table(df)
+                df_plot = pd.DataFrame(plot_data)
 
                 # Plot the data
                 fig = go.Figure()
-                fig.add_trace(go.Bar(
-                    x=df['Category'],
-                    y=df['Max Value'],
-                    name='Max Value',
-                    marker_color='indianred'
-                ))
-                fig.add_trace(go.Bar(
-                    x=df['Category'],
-                    y=df['Min Value'],
-                    name='Min Value',
-                    marker_color='lightsalmon'
-                ))
-                fig.add_trace(go.Bar(
-                    x=df['Category'],
-                    y=df['Avg Value'],
-                    name='Avg Value',
-                    marker_color='lightblue'
-                ))
+                for category in df_plot.columns[1:]:  # Skip the 'State' column
+                    fig.add_trace(go.Bar(
+                        x=df_plot['State'],
+                        y=df_plot[category],
+                        name=category
+                    ))
 
                 fig.update_layout(
                     title=f'Statistics for {year} - {report_month_str}',
                     xaxis_tickfont_size=14,
                     yaxis=dict(
-                        title='Value',
+                        title='Capacity (MW)',
                         titlefont_size=16,
                         tickfont_size=14,
                     ),
@@ -288,6 +274,11 @@ if calculate:
                 )
 
                 st.plotly_chart(fig)
+
+                # Display the data as a table
+                st.write("## Tabular Data")
+                st.table(df_plot)
+
 
 
         if function == "Calculate statistics by state for a range of months":

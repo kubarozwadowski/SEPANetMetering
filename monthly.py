@@ -14,11 +14,11 @@ def calculate_stats_month(sheet, year, month, start_column):
     rows = list(sheet.iter_rows(values_only=True))
     data = rows[4:]  # Data starts on row 5
 
-    # Filter by year and month
-    filtered_data = [row for row in data if row[0] == year and row[1] == month]
+    # Filter by year, month, and state 'US'
+    filtered_data = [row for row in data if row[0] == year and row[1] == month and row[2] == 'US']
 
     if not filtered_data:
-        print(f"No data found for year {year} and month {month}")
+        print(f"No data found for year {year}, month {month}, and state 'US'")
         return None, None
 
     # Define the categories in the specified order
@@ -34,27 +34,20 @@ def calculate_stats_month(sheet, year, month, start_column):
         valid_entries = [(state, value) for state, value in valid_entries if is_valid_integer(value)]
         
         if valid_entries:
-            max_value = max(valid_entries, key=lambda x: x[1])
-            min_value = min(valid_entries, key=lambda x: x[1])
-            avg_value = sum(int(value) for state, value in valid_entries) / len(valid_entries)
-            current_value = valid_entries[-1][1]  # Get the current month's value
-
-            stats[category] = {
-                'max': {'value': max_value[1], 'state': max_value[0]},
-                'min': {'value': min_value[1], 'state': min_value[0]},
-                'avg': avg_value,
-                'current': current_value
-            }
+            us_value = next((value for state, value in valid_entries if state == 'US'), None)
+            if us_value is not None:
+                stats[category] = {
+                    'us_value': us_value
+                }
             raw_data.extend([{'state': state, 'category': category, 'value': value} for state, value in valid_entries])
         else:
             stats[category] = {
-                'max': {'value': None, 'state': None},
-                'min': {'value': None, 'state': None},
-                'avg': None,
-                'current': None
+                'us_value': None
             }
 
     return stats, raw_data
+
+
 
 def calculate_stats_uptomonth_state(sheet, month, state, start_column):
     rows = list(sheet.iter_rows(values_only=True))
