@@ -87,6 +87,21 @@ def create_blank_us_map(title):
     m = folium.Map(location=[37.8, -96], zoom_start=4)
     folium_static(m)
 
+infolink = "https://www.eia.gov/electricity/data/eia861m/#:~:text=Description%3A%20The,established%20imputation%20procedures."
+st.logo("SEPALogo.png")
+st.title("EIA-861M Net Metering Data")
+st.subheader("Interactive Analysis of Monthly Net Metering Data Across Various Technologies and States")
+st.subheader("[More Information](%s)" % infolink)
+st.write("Use the sidebar on the left to adjust preferences (Drag to resize).")
+st.write("The data on this website is current as of ***May 2024***.")
+st.subheader(":red[Important notes about the data:]")
+with st.expander("Due to the varied formatting of the data, some values may be missing, especially for older months. Click to see details."):
+    st.write("Because of the nature of how the data is collected, monthly data over a large range may be slow to display graphs")
+    st.write("No virtual data between Jan 2011 and Dec 2016")
+    st.write("No data for Tennessee in Jan 2011")
+    st.write("No data for Alabama and Missippi between Jan 2011 and March 2012")
+    st.write("No data about the battery technology between Jan 2011 and July 2023")
+
 st.sidebar.title("User Input")
 with st.sidebar:
 
@@ -226,20 +241,6 @@ with st.sidebar:
     calculate = st.button('Calculate Stats')
 
 
-infolink = "https://www.eia.gov/electricity/data/eia861m/#:~:text=Description%3A%20The,established%20imputation%20procedures."
-st.logo("SEPALogo.png")
-st.title("EIA-861M Net Metering Data")
-st.subheader("Interactive Analysis of Monthly Net Metering Data Across Various Technologies and States")
-st.subheader("[More Information](%s)" % infolink)
-st.write("Use the sidebar on the left to adjust preferences (Drag to resize).")
-st.write("The data on this website is current as of ***May 2024***.")
-st.subheader(":red[Important notes about the data:]")
-with st.expander("Due to the varied formatting of the data, some values may be missing, especially for older months. Click to see details."):
-    st.write("Because of the nature of how the data is collected, monthly data over a large range may be slow to display graphs")
-    st.write("No virtual data between Jan 2011 and Dec 2016")
-    st.write("No data for Tennessee in Jan 2011")
-    st.write("No data for Alabama and Missippi between Jan 2011 and March 2012")
-    st.write("No data about the battery technology between Jan 2011 and July 2023")
 
 
 
@@ -304,12 +305,46 @@ if calculate:
                 st.table(df_plot)
 
 
-
         if function == "Calculate statistics by state for a range of months":
             start_column = categories_mapping[category][subcategory]
 
             # Call the calculate_stats_range_months_state function with the start and end year and month inputs
             stats, raw_data = calculate_stats_range_months_state(monthly_totals_states, start_year, end_year, start_month, end_month, state, start_column)
+            
+            if stats:
+                st.write(f"## Statistics for {state} from {start_year}-{month_reverse_mapping[start_month]} to {end_year}-{month_reverse_mapping[end_month]}")
+                data = {
+                    'Category': [],
+                    'Max Value': [],
+                    'Min Value': [],
+                    'Avg Value': []
+                }
+
+                for category, values in stats.items():
+                    if values['max']['value'] is not None:
+                        max_val_str = f"{values['max']['value']} ({values['max']['year']}-{month_reverse_mapping[values['max']['month']]})"
+                    else:
+                        max_val_str = "N/A"
+                    
+                    if values['min']['value'] is not None:
+                        min_val_str = f"{values['min']['value']} ({values['min']['year']}-{month_reverse_mapping[values['min']['month']]})"
+                    else:
+                        min_val_str = "N/A"
+
+                    data['Category'].append(category)
+                    data['Max Value'].append(max_val_str)
+                    data['Min Value'].append(min_val_str)
+                    data['Avg Value'].append(values['avg'])
+
+                df = pd.DataFrame(data)
+                category_order = ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']
+                df['Category'] = pd.Categorical(df['Category'], categories=category_order, ordered=True)
+                st.table(df)
+
+
+        if function == "Calculate statistics for a range of months (US Total)":
+            start_column = categories_mapping[category][subcategory]
+            stats, raw_data = calculate_stats_range_us_total(monthly_totals_states, start_year, end_year, start_month, end_month, start_column)
 
             if stats:
                 st.write("## Statistics")
@@ -351,13 +386,13 @@ if calculate:
                                     'Year': year,
                                     'Month': month,
                                     'Category': category,
-                                    'Value': values['current']
+                                    'Value': values.get('us_value')
                                 })
 
                 df_all_months = pd.DataFrame(all_months_data)
                 df_all_months['Year-Month'] = df_all_months.apply(lambda row: f"{row['Year']}-{month_reverse_mapping[row['Month']]}", axis=1)
                 fig = px.line(df_all_months, x='Year-Month', y='Value', color='Category', markers=True,
-                            labels={'Value': y_axis_label})
+                              labels={'Value': y_axis_label})
                 fig.update_xaxes(tickmode='array', tickvals=df_all_months['Year-Month'], ticktext=df_all_months['Year-Month'])
                 st.plotly_chart(fig)
 
@@ -371,8 +406,6 @@ if calculate:
                 df_tabular = pd.DataFrame(tabular_data)
                 st.write("## Tabular Data for Graph")
                 st.table(df_tabular)
-
-
 
     if filter_method == "***Year***":
         if function_api == "Calculate statistics for a specific year (US Total)":
