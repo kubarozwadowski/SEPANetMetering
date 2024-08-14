@@ -410,34 +410,41 @@ if calculate:
     if filter_method == "***Year***":
         if function_api == "Calculate statistics for a specific year (US Total)":
             result = technology_year(category, year)
-            if result:
-                for sector, data in result['sectors'].items():
-                    sector_name = data['data'][0]['sectorName'].capitalize()
-                    sector_title = sector_name if sector_name != "All sectors" else "All Sectors"
-                    st.write(f"### {sector_title} ({year})")
-                    
-                    summary_df = pd.DataFrame({
-                        'Metric': ['Max Capacity', 'Min Capacity', 'Average Capacity', 
-                                'Max Customers', 'Min Customers', 'Average Customers'],
-                        'Value': [f"{data['max_capacity']['value']} ({data['max_capacity']['state']})", 
-                                f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
-                                data['average_capacity'], 
-                                f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
-                                f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
-                                data['average_customers']]
-                    })
-                    
-                    st.table(summary_df)
-                    
-                    # Create bar graphs for capacity and customers
-                    detailed_df = pd.DataFrame(data['data'])
-                    fig_capacity = px.bar(detailed_df, x='stateName', y='capacity', color='sector',
-                                        title=f'Capacity by Sector for {year}', labels={'capacity': 'Capacity (MWh)'})
-                    fig_customers = px.bar(detailed_df, x='stateName', y='customers', color='sector',
-                                        title=f'Customers by Sector for {year}', labels={'customers': 'Number of Customers'})
-                    
-                    st.plotly_chart(fig_capacity)
-                    st.plotly_chart(fig_customers)
+    if result:
+        for sector, data in result['sectors'].items():
+            sector_name = data['data'][0]['sectorName'].capitalize()
+            sector_title = sector_name if sector_name != "All sectors" else "All Sectors"
+            st.write(f"### {sector_title} ({year})")
+            
+            # Extract US total capacity and customers
+            us_total_capacity = sum(float(item['capacity']) for item in data['data'] if item['state'] == 'US')
+            us_total_customers = sum(int(item['customers']) for item in data['data'] if item['state'] == 'US')
+            
+            summary_df = pd.DataFrame({
+                'Metric': ['Max Capacity', 'Min Capacity', 'Average Capacity', 
+                           'Max Customers', 'Min Customers', 'Average Customers', 
+                           'US Total Capacity', 'US Total Customers'],
+                'Value': [f"{data['max_capacity']['value']} ({data['max_capacity']['state']})", 
+                          f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
+                          data['average_capacity'], 
+                          f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
+                          f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
+                          data['average_customers'], 
+                          f"{us_total_capacity} MW", 
+                          f"{us_total_customers}"]
+            })
+            
+            st.table(summary_df)
+            
+            # Create bar graphs for capacity and customers
+            detailed_df = pd.DataFrame(data['data'])
+            fig_capacity = px.bar(detailed_df, x='stateName', y='capacity', color='sector',
+                                  title=f'Capacity by Sector for {year}', labels={'capacity': 'Capacity (MWh)'})
+            fig_customers = px.bar(detailed_df, x='stateName', y='customers', color='sector',
+                                   title=f'Customers by Sector for {year}', labels={'customers': 'Number of Customers'})
+            
+            st.plotly_chart(fig_capacity)
+            st.plotly_chart(fig_customers)
 
         if function_api == "Calculate statistics for a range of years (US Total)":
             result = technology_range(category, start_year, end_year)
@@ -489,15 +496,14 @@ if calculate:
                     sector_title = sector_name if sector_name != "All sectors" else "All Sectors"
                     st.write(f"### {sector_title} ({state}, {year})")
                     
+                    # Extract current capacity and customers for the specified year and state
+                    current_capacity = next((item['capacity'] for item in data['data'] if item['period'] == str(year)), None)
+                    current_customers = next((item['customers'] for item in data['data'] if item['period'] == str(year)), None)
+                    
+                    # Display current capacity and customers
                     summary_df = pd.DataFrame({
-                        'Metric': ['Max Capacity', 'Min Capacity', 'Average Capacity', 
-                                'Max Customers', 'Min Customers', 'Average Customers'],
-                        'Value': [f"{data['max_capacity']['value']} ({data['max_capacity']['state']})", 
-                                f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
-                                data['average_capacity'], 
-                                f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
-                                f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
-                                data['average_customers']]
+                        'Metric': ['Current Capacity', 'Current Customers'],
+                        'Value': [f"{current_capacity} MW", f"{current_customers}"]
                     })
                     
                     st.table(summary_df)
@@ -505,7 +511,7 @@ if calculate:
                     # Create bar graphs for capacity and customers
                     detailed_df = pd.DataFrame(data['data'])
                     fig_capacity = px.bar(detailed_df, x='stateName', y='capacity', color='sector',
-                                        title=f'Capacity by Sector for {state} ({year})', labels={'capacity': 'Capacity (MWh)'})
+                                        title=f'Capacity by Sector for {state} ({year})', labels={'capacity': 'Capacity (MW)'})
                     fig_customers = px.bar(detailed_df, x='stateName', y='customers', color='sector',
                                         title=f'Customers by Sector for {state} ({year})', labels={'customers': 'Number of Customers'})
                     
