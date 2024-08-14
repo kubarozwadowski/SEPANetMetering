@@ -522,34 +522,41 @@ if calculate:
                     
                     summary_df = pd.DataFrame({
                         'Metric': ['Max Capacity', 'Min Capacity', 'Average Capacity', 
-                                'Max Customers', 'Min Customers', 'Average Customers'],
+                                   'Max Customers', 'Min Customers', 'Average Customers'],
                         'Value': [f"{data['max_capacity']['value']} ({data['max_capacity']['state']})", 
-                                f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
-                                data['average_capacity'], 
-                                f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
-                                f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
-                                data['average_customers']]
+                                  f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
+                                  data['average_capacity'], 
+                                  f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
+                                  f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
+                                  data['average_customers']]
                     })
                     
                     st.table(summary_df)
                     
                     # Prepare data for trend graph
-                    yearly_data = [item for item in data['data'] if item['state'] == 'US']
+                    yearly_data = [item for item in data['data'] if item['state'] == state]
+                    print(f"Yearly Data: {yearly_data}")  # Debugging statement
                     trend_df = pd.DataFrame(yearly_data)
 
                     # Ensure unique data points
                     trend_df = trend_df.drop_duplicates().dropna()
+                    print(f"Trend DataFrame after dropping duplicates and NA: {trend_df}")  # Debugging statement
 
-                    # Sort data by year
-                    trend_df = trend_df.sort_values(by='period')
+                    # Check if 'period' exists in the DataFrame
+                    if 'period' not in trend_df.columns:
+                        st.error("No 'period' column found in the trend data.")
+                    else:
+                        # Sort data by year
+                        trend_df = trend_df.sort_values(by='period')
+                        print(f"Trend DataFrame after sorting: {trend_df}")  # Debugging statement
 
-                    # Create line graphs for trends
-                    fig_capacity_trend = px.line(trend_df, x='period', y='capacity', title='Total Capacity Trend',
-                                                labels={'capacity': 'Capacity (MWh)', 'period': 'Year'})
-                    fig_capacity_trend.update_xaxes(dtick=1)
-                    fig_customers_trend = px.line(trend_df, x='period', y='customers', title='Total Customers Trend',
-                                                labels={'customers': 'Number of Customers', 'period': 'Year'})
-                    fig_customers_trend.update_xaxes(dtick=1)
-                    
-                    st.plotly_chart(fig_capacity_trend)
-                    st.plotly_chart(fig_customers_trend)
+                        # Create line graphs for trends
+                        fig_capacity_trend = px.line(trend_df, x='period', y='capacity', title='Total Capacity Trend',
+                                                     labels={'capacity': 'Capacity (MWh)', 'period': 'Year'})
+                        fig_capacity_trend.update_xaxes(dtick=1)
+                        fig_customers_trend = px.line(trend_df, x='period', y='customers', title='Total Customers Trend',
+                                                      labels={'customers': 'Number of Customers', 'period': 'Year'})
+                        fig_customers_trend.update_xaxes(dtick=1)
+                        
+                        st.plotly_chart(fig_capacity_trend)
+                        st.plotly_chart(fig_customers_trend)
