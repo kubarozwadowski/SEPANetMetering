@@ -236,9 +236,9 @@ def state_technology_range(technology: str, start: int, end: int, state: str) ->
 
 
 # Example usage
-technology = 'Photovoltaic'
-start = 2015
-end = 2018
-state = 'IN'
-result = state_technology_range(technology, start, end, state)
-print(result['sectors'].get('COM'))
+#technology = 'Photovoltaic'
+#start = 2015
+#end = 2018
+#state = 'IN'
+#result = state_technology_range(technology, start, end, state)
+#print(result['sectors'].get('COM'))
