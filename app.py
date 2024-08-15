@@ -84,6 +84,7 @@ function_mapping = {
 
 
 infolink = "https://www.eia.gov/electricity/data/eia861m/#:~:text=Description%3A%20The,established%20imputation%20procedures."
+faq = "https://www.eia.gov/survey/form/eia_861m/faqs.php"
 st.logo("SEPALogo.png")
 st.title("EIA-861M Net Metering Data")
 st.subheader("Interactive Analysis of Monthly Net Metering Data Across Various Technologies and States")
@@ -105,6 +106,8 @@ with st.expander("Click to see important definitions and explanations of the cat
     ''')
 
 st.subheader("[More Information](%s)" % infolink)
+st.subheader("[Frequently Asked Questions](%s)" % faq)
+
 
 st.subheader("Search Features:")
 st.write("""
