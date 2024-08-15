@@ -97,7 +97,6 @@ with st.expander("Click to see important definitions and explanations of the cat
     - **Total:** residential + commercial + industrial + transportation + other.
     - **All Technologies:** photovoltaic + battery + wind + other. In 2022 and prior, battery data is omitted.
     - **Standard voltaic** is included in **Capacity MW** and **Customers** categories.
-    - **Virtual photovoltaic** is included in **Virtual Capacity MW** and **Virtual Customers**.
     - **Capacity MW:** Total installed capacity of PV systems.
     - **Customers:** Number of customers enrolled in net metering programs. Each meter is counted as a separate customer, even if multiple meters are aggregated under a single buyer representative for commercial, franchise, or residential groups. For public-street and highway lighting, count one customer per community.
     - **Virtual Customers:** Number of customers participating in virtual net metering programs.
@@ -130,26 +129,20 @@ st.write("The data on this website is current as of **May 2024**.")
 st.sidebar.title("User Input")
 with st.sidebar:
 
-    filter_method = st.radio(
-        "Filter Data By:",
-        ["***Month***", "***Year***"],
-        index=None
-    )
+    function = st.selectbox("Select a Function", [
+        "Calculate statistics for a specific month (US Total)", 
+        "Calculate statistics for a range of months (US Total)", 
+        "Calculate statistics by state for a range of months",
+        "Calculate statistics for a specific year (US Total)", 
+        "Calculate statistics for a range of years (US Total)", 
+        "Calculate statistics by state for a specific year", 
+        "Calculate statistics by state for a range of years"
+    ],index=None)
 
-    if filter_method == "***Month***":
-        function = st.selectbox("Select a Function", ["Calculate statistics for a specific month (US Total)", "Calculate statistics for a range of months (US Total)", "Calculate statistics by state for a range of months"], index=None)
-        'You Selected: ', function
-
-        category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
-        'You Selected: ', category
-
-        subcategory = None
-        if category:
-            subcategory = st.selectbox('Select a Sector', list(categories_mapping[category].keys()), index=None)
-            st.write('You Selected:', subcategory)
-    
-
-        if function == "Calculate statistics for a specific month (US Total)":
+    if function == "Calculate statistics for a specific month (US Total)":
+        with st.sidebar.form("form1"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
+            subcategory = st.selectbox('Select a Sector', ["Capacity MW", "Customers", "Energy Sold Back MWh"], index=None)
             with st.expander('Please Select a Month and Year'):
                 this_year = datetime.now().year
                 this_month = datetime.now().month
@@ -157,11 +150,12 @@ with st.sidebar:
                 month_abbr = month_abbr[1:]
                 report_month_str = st.radio("", month_abbr, index=this_month - 1, horizontal=True)
                 month = month_abbr.index(report_month_str) + 1
+            submit_button = st.form_submit_button("Calculate")
 
-            # Result
-            st.text(f'You Selected: {report_month_str} {year} ')
-
-        if function == "Calculate statistics by state for a range of months":
+    if function == "Calculate statistics for a range of months (US Total)":
+        with st.sidebar.form("form2"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
+            subcategory = st.selectbox('Select a Sector', ["Capacity MW", "Customers", "Energy Sold Back MWh"], index=None)
             with st.expander('Please Select a Start Month and Year'):
                 this_year = datetime.now().year
                 this_month = datetime.now().month
@@ -169,10 +163,6 @@ with st.sidebar:
                 start_month_abbr = list(month_abbr)[1:]
                 start_report_month_str = st.radio("", start_month_abbr, index=this_month - 1, horizontal=True, key="start_month")
                 start_month = start_month_abbr.index(start_report_month_str) + 1
-
-            # Result
-            st.text(f'Start Date: {start_report_month_str} {start_year} ')
-
             with st.expander('Please Select an End Month and Year'):
                 this_year = datetime.now().year
                 this_month = datetime.now().month
@@ -180,20 +170,12 @@ with st.sidebar:
                 end_month_abbr = list(month_abbr)[1:]
                 end_report_month_str = st.radio("", end_month_abbr, index=this_month - 1, horizontal=True, key="end_month")
                 end_month = end_month_abbr.index(end_report_month_str) + 1
+            submit_button = st.form_submit_button("Calculate")
 
-            # Result
-            st.text(f'End Date: {end_report_month_str} {end_year} ')
-
-            
-            state = st.selectbox('Select a State', [
-                "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA",
-                "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD",
-                "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH",
-                "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC",
-                "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"], index=None)
-            'You Selected: ', state
-
-        if function == "Calculate statistics for a range of months (US Total)":
+    if function == "Calculate statistics by state for a range of months":
+        with st.sidebar.form("form3"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
+            subcategory = st.selectbox('Select a Sector', ["Capacity MW", "Customers", "Energy Sold Back MWh"], index=None)
             with st.expander('Please Select a Start Month and Year'):
                 this_year = datetime.now().year
                 this_month = datetime.now().month
@@ -201,10 +183,6 @@ with st.sidebar:
                 start_month_abbr = list(month_abbr)[1:]
                 start_report_month_str = st.radio("", start_month_abbr, index=this_month - 1, horizontal=True, key="start_month")
                 start_month = start_month_abbr.index(start_report_month_str) + 1
-
-            # Result
-            st.text(f'Start Date: {start_report_month_str} {start_year} ')
-
             with st.expander('Please Select an End Month and Year'):
                 this_year = datetime.now().year
                 this_month = datetime.now().month
@@ -212,66 +190,60 @@ with st.sidebar:
                 end_month_abbr = list(month_abbr)[1:]
                 end_report_month_str = st.radio("", end_month_abbr, index=this_month - 1, horizontal=True, key="end_month")
                 end_month = end_month_abbr.index(end_report_month_str) + 1
-
-            # Result
-            st.text(f'End Date: {end_report_month_str} {end_year} ')
-
-
-    if filter_method == "***Year***": 
-        function_api = st.selectbox("Select a Function", ["Calculate statistics for a specific year (US Total)", "Calculate statistics for a range of years (US Total)", "Calculate statistics by state for a specific year", "Calculate statistics by state for a range of years"], index=None)
-        'You Selected: ', function_api
-
-        category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
-        'You Selected: ', category
-
-        if function_api == "Calculate statistics for a specific year (US Total)":
-            year = st.slider("Select a Year", 2013, 2022, 2018)
-            'You Selected: ', year
-
-        if function_api == "Calculate statistics for a range of years (US Total)":
-            values = st.slider("Select a range of values", 2013, 2022, (2016, 2019))
-            st.write("Start Year:", values[0])
-            st.write("End Year:", values[1])
-            start_year = values[0]
-            end_year = values[1]
-
-        if function_api == "Calculate statistics by state for a specific year":
-            year = st.slider("Select a Year", 2013, 2022, 2018)
-            'You Selected: ', year
-
             state = st.selectbox('Select a State', [
                 "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA",
                 "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD",
                 "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH",
                 "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC",
                 "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"], index=None)
-            'You Selected: ', state
+            submit_button = st.form_submit_button("Calculate")
 
-        if function_api == "Calculate statistics by state for a range of years":
-            values = st.slider("Select a range of values", 2013, 2022, (2016, 2019))
-            st.write("Start Year:", values[0])
-            st.write("End Year:", values[1])
+    if function == "Calculate statistics for a specific year (US Total)":
+        with st.sidebar.form("form4"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
+            year = st.slider("Select a Year", 2013, 2022, 2018)
+            submit_button = st.form_submit_button("Calculate")
+
+    if function == "Calculate statistics for a range of years (US Total)":
+        with st.sidebar.form("form5"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
+            values = st.slider("Select a range of values", 2013, 2022, (2016, 2019))   
             start_year = values[0]
             end_year = values[1]
-
+            submit_button = st.form_submit_button("Calculate")
+    
+    if function == "Calculate statistics by state for a specific year":
+        with st.sidebar.form("form6"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
+            year = st.slider("Select a Year", 2013, 2022, 2018)
             state = st.selectbox('Select a State', [
-                "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA",
-                "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD",
-                "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH",
-                "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC",
-                "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"], index=None)
-            'You Selected: ', state
+                 "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA",
+                 "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD",
+                 "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH",
+                 "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC",
+                 "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"], index=None)
+            submit_button = st.form_submit_button("Calculate")
+    
+    if function == "Calculate statistics by state for a range of years":
+        with st.sidebar.form("form7"):
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
+            values = st.slider("Select a range of values", 2013, 2022, (2016, 2019))   
+            start_year = values[0]
+            end_year = values[1]
+            state = st.selectbox('Select a State', [
+                 "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA",
+                 "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD",
+                 "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH",
+                 "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC",
+                 "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"], index=None)
+            submit_button = st.form_submit_button("Calculate")
+    
 
-    #show stats + maps + graphs on button press "Calculate"
-    calculate = st.button('Calculate Stats')
 
-
-
-
-
-if calculate:
+#show stats + maps + graphs on button press "Save"
+if submit_button:
         
-    if filter_method == "***Month***":
+
         if function == "Calculate statistics for a specific month (US Total)":
             month_num = month_mapping[report_month_str]
             start_column = categories_mapping[category][subcategory]
@@ -329,7 +301,6 @@ if calculate:
                 st.write("## Tabular Data")
                 st.table(df_plot)
 
-
         if function == "Calculate statistics by state for a range of months":
             start_column = categories_mapping[category][subcategory]
 
@@ -365,7 +336,6 @@ if calculate:
                 category_order = ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']
                 df['Category'] = pd.Categorical(df['Category'], categories=category_order, ordered=True)
                 st.table(df)
-
 
         if function == "Calculate statistics for a range of months (US Total)":
             start_column = categories_mapping[category][subcategory]
@@ -432,8 +402,7 @@ if calculate:
                 st.write("## Tabular Data for Graph")
                 st.table(df_tabular)
 
-    if filter_method == "***Year***":
-        if function_api == "Calculate statistics for a specific year (US Total)":
+        if function == "Calculate statistics for a specific year (US Total)":
             result = technology_year(category, year)
             if result:
                 for sector, data in result['sectors'].items():
@@ -471,7 +440,7 @@ if calculate:
                     st.plotly_chart(fig_capacity)
                     st.plotly_chart(fig_customers)
 
-        if function_api == "Calculate statistics for a range of years (US Total)":
+        if function == "Calculate statistics for a range of years (US Total)":
             result = technology_range(category, start_year, end_year)
             if result:
                 for sector, data in result['sectors'].items():
@@ -513,7 +482,7 @@ if calculate:
                     st.plotly_chart(fig_capacity_trend)
                     st.plotly_chart(fig_customers_trend)
 
-        if function_api == "Calculate statistics by state for a specific year":
+        if function == "Calculate statistics by state for a specific year":
             result = state_technology_year(category, year, state)
             if result:
                 for sector, data in result['sectors'].items():
@@ -543,7 +512,7 @@ if calculate:
                     st.plotly_chart(fig_capacity)
                     st.plotly_chart(fig_customers)
 
-        if function_api == "Calculate statistics by state for a range of years":
+        if function == "Calculate statistics by state for a range of years":
             result = state_technology_range(category, start_year, end_year, state)
             if result:
                 for sector, data in result['sectors'].items():
