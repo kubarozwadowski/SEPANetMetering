@@ -201,13 +201,13 @@ with st.sidebar:
     if function == "Calculate statistics for a specific year (US Total)":
         with st.sidebar.form("form4"):
             category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
-            year = st.slider("Select a Year", 2013, 2022, 2018)
+            year = st.slider("Select a Year", 2013, 2019, 2016)
             submit_button = st.form_submit_button("Calculate")
 
     if function == "Calculate statistics for a range of years (US Total)":
         with st.sidebar.form("form5"):
             category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
-            values = st.slider("Select a range of values", 2013, 2022, (2016, 2019))   
+            values = st.slider("Select a range of values", 2013, 2019, (2014, 2017))   
             start_year = values[0]
             end_year = values[1]
             submit_button = st.form_submit_button("Calculate")
@@ -215,7 +215,7 @@ with st.sidebar:
     if function == "Calculate statistics by state for a specific year":
         with st.sidebar.form("form6"):
             category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
-            year = st.slider("Select a Year", 2013, 2022, 2018)
+            year = st.slider("Select a Year", 2013, 2019, 2015)
             state = st.selectbox('Select a State', [
                  "AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DE", "FL", "GA",
                  "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD",
@@ -227,7 +227,7 @@ with st.sidebar:
     if function == "Calculate statistics by state for a range of years":
         with st.sidebar.form("form7"):
             category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
-            values = st.slider("Select a range of values", 2013, 2022, (2016, 2019))   
+            values = st.slider("Select a range of values", 2013, 2019, (2015, 2017))   
             start_year = values[0]
             end_year = values[1]
             state = st.selectbox('Select a State', [
@@ -448,7 +448,12 @@ if submit_button:
                     sector_title = sector_name if sector_name != "All sectors" else "All Sectors"
                     st.write(f"### {sector_title} ({start_year} - {end_year})")
                     
-                    summary_df = pd.DataFrame({
+                    # Extract yearly capacity and customer data
+                    yearly_capacity = {item['period']: item['capacity'] for item in data['data'] if item['state'] == 'US'}
+                    yearly_customers = {item['period']: item['customers'] for item in data['data'] if item['state'] == 'US'}
+                    
+                    # Prepare the summary table
+                    summary_data = {
                         'Metric': ['Max Capacity', 'Min Capacity', 'Average Capacity', 
                                 'Max Customers', 'Min Customers', 'Average Customers'],
                         'Value': [f"{data['max_capacity']['value']} ({data['max_capacity']['state']})", 
@@ -457,7 +462,16 @@ if submit_button:
                                 f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
                                 f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
                                 data['average_customers']]
-                    })
+                    }
+                    
+                    # Add the current year values
+                    for year in range(start_year, end_year + 1):
+                        summary_data['Metric'].append(f"Capacity {year}")
+                        summary_data['Value'].append(yearly_capacity.get(str(year), "N/A"))
+                        summary_data['Metric'].append(f"Customers {year}")
+                        summary_data['Value'].append(yearly_customers.get(str(year), "N/A"))
+                    
+                    summary_df = pd.DataFrame(summary_data)
                     
                     st.table(summary_df)
                     
@@ -519,44 +533,51 @@ if submit_button:
                     sector_name = data['data'][0]['sectorName'].capitalize()
                     sector_title = sector_name if sector_name != "All sectors" else "All Sectors"
                     st.write(f"### {sector_title} ({state}, {start_year} - {end_year})")
-                    
-                    summary_df = pd.DataFrame({
+
+                    # Extract yearly capacity and customer data
+                    yearly_capacity = {item['period']: item['capacity'] for item in data['data'] if item['state'] == state}
+                    yearly_customers = {item['period']: item['customers'] for item in data['data'] if item['state'] == state}
+
+                    # Prepare the summary table
+                    summary_data = {
                         'Metric': ['Max Capacity', 'Min Capacity', 'Average Capacity', 
-                                   'Max Customers', 'Min Customers', 'Average Customers'],
+                                'Max Customers', 'Min Customers', 'Average Customers'],
                         'Value': [f"{data['max_capacity']['value']} ({data['max_capacity']['state']})", 
-                                  f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
-                                  data['average_capacity'], 
-                                  f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
-                                  f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
-                                  data['average_customers']]
-                    })
-                    
+                                f"{data['min_capacity']['value']} ({data['min_capacity']['state']})", 
+                                data['average_capacity'], 
+                                f"{data['max_customers']['value']} ({data['max_customers']['state']})", 
+                                f"{data['min_customers']['value']} ({data['min_customers']['state']})", 
+                                data['average_customers']]
+                    }
+
+                    # Add the current year values
+                    for year in range(start_year, end_year + 1):
+                        summary_data['Metric'].append(f"Capacity {year}")
+                        summary_data['Value'].append(yearly_capacity.get(str(year), "N/A"))
+                        summary_data['Metric'].append(f"Customers {year}")
+                        summary_data['Value'].append(yearly_customers.get(str(year), "N/A"))
+
+                    summary_df = pd.DataFrame(summary_data)
+
                     st.table(summary_df)
-                    
+
                     # Prepare data for trend graph
                     yearly_data = [item for item in data['data'] if item['state'] == state]
-                    print(f"Yearly Data: {yearly_data}")  # Debugging statement
                     trend_df = pd.DataFrame(yearly_data)
 
                     # Ensure unique data points
                     trend_df = trend_df.drop_duplicates().dropna()
-                    print(f"Trend DataFrame after dropping duplicates and NA: {trend_df}")  # Debugging statement
 
-                    # Check if 'period' exists in the DataFrame
-                    if 'period' not in trend_df.columns:
-                        st.error("No 'period' column found in the trend data.")
-                    else:
-                        # Sort data by year
-                        trend_df = trend_df.sort_values(by='period')
-                        print(f"Trend DataFrame after sorting: {trend_df}")  # Debugging statement
+                    # Sort data by year
+                    trend_df = trend_df.sort_values(by='period')
 
-                        # Create line graphs for trends
-                        fig_capacity_trend = px.line(trend_df, x='period', y='capacity', title='Total Capacity Trend',
-                                                     labels={'capacity': 'Capacity (MWh)', 'period': 'Year'})
-                        fig_capacity_trend.update_xaxes(dtick=1)
-                        fig_customers_trend = px.line(trend_df, x='period', y='customers', title='Total Customers Trend',
-                                                      labels={'customers': 'Number of Customers', 'period': 'Year'})
-                        fig_customers_trend.update_xaxes(dtick=1)
-                        
-                        st.plotly_chart(fig_capacity_trend)
-                        st.plotly_chart(fig_customers_trend)
+                    # Create line graphs for trends
+                    fig_capacity_trend = px.line(trend_df, x='period', y='capacity', title='Total Capacity Trend',
+                                                labels={'capacity': 'Capacity (MWh)', 'period': 'Year'})
+                    fig_capacity_trend.update_xaxes(dtick=1)
+                    fig_customers_trend = px.line(trend_df, x='period', y='customers', title='Total Customers Trend',
+                                                labels={'customers': 'Number of Customers', 'period': 'Year'})
+                    fig_customers_trend.update_xaxes(dtick=1)
+
+                    st.plotly_chart(fig_capacity_trend)
+                    st.plotly_chart(fig_customers_trend)
