@@ -244,7 +244,8 @@ with st.sidebar:
 
 
 #show stats + maps + graphs on button press "Save"
-if submit_button:
+
+if function and submit_button:
         
 
         if function == "Calculate statistics for a specific month (US Total)":
