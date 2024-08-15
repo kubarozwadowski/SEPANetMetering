@@ -117,10 +117,10 @@ st.subheader(":red[Important Notes About Data Discrepancies:]")
 with st.expander("Due to the varied formatting of the data, some values may be missing, especially for older months. Click to see details."):
     st.write("""
     - Because of the nature of how the data is collected, monthly data over a large range may be slow to display graphs.
+    - If a graph or data is not being displayed, the most likely cause is missing data.
     - No virtual data between Jan 2011 and Dec 2016.
     - No data for Tennessee in Jan 2011.
     - No data for Alabama and Mississippi between Jan 2011 and March 2012.
-    - No data about the battery technology between Jan 2011 and July 2023.
     """)
 
 st.write("The data on this website is current as of **May 2024**.")
@@ -141,7 +141,7 @@ with st.sidebar:
 
     if function == "Calculate statistics for a specific month (US Total)":
         with st.sidebar.form("form1"):
-            category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
             subcategory = st.selectbox('Select a Sector', ["Capacity MW", "Customers", "Energy Sold Back MWh"], index=None)
             with st.expander('Please Select a Month and Year'):
                 this_year = datetime.now().year
@@ -154,7 +154,7 @@ with st.sidebar:
 
     if function == "Calculate statistics for a range of months (US Total)":
         with st.sidebar.form("form2"):
-            category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
             subcategory = st.selectbox('Select a Sector', ["Capacity MW", "Customers", "Energy Sold Back MWh"], index=None)
             with st.expander('Please Select a Start Month and Year'):
                 this_year = datetime.now().year
@@ -174,7 +174,7 @@ with st.sidebar:
 
     if function == "Calculate statistics by state for a range of months":
         with st.sidebar.form("form3"):
-            category = st.selectbox('Select a Technology', ["Photovoltaic", "Battery", "Wind", "Other", "All Technologies"], index=None)
+            category = st.selectbox('Select a Technology', ["Photovoltaic", "Wind", "Other", "All Technologies"], index=None)
             subcategory = st.selectbox('Select a Sector', ["Capacity MW", "Customers", "Energy Sold Back MWh"], index=None)
             with st.expander('Please Select a Start Month and Year'):
                 this_year = datetime.now().year
