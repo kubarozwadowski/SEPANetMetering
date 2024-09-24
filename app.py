@@ -126,7 +126,7 @@ with st.expander("Due to the varied formatting of the data, some values may be m
     - No data for Alabama and Mississippi between Jan 2011 and March 2012.
     """)
 
-st.write("The data on this website is current as of **May 2024**.")
+st.write("The data on this website is current as of **June 2024**.")
 
 
 st.sidebar.title("User Input")
