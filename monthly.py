@@ -47,8 +47,6 @@ def calculate_stats_month(sheet, year, month, start_column):
 
     return stats, raw_data
 
-
-
 def calculate_stats_uptomonth_state(sheet, month, state, start_column):
     rows = list(sheet.iter_rows(values_only=True))
     data = rows[4:]  # Data starts on row 5
@@ -140,8 +138,28 @@ def calculate_stats_range_months_state(sheet, start_year, end_year, start_month,
     rows = list(sheet.iter_rows(values_only=True))
     data = rows[4:]  # Data starts on row 5
 
+    # Define a helper function to check month and year ranges correctly
+    def is_in_date_range(year, month):
+        if start_year < end_year:
+            # Standard range across multiple years
+            return start_year <= year <= end_year and (
+                (year == start_year and month >= start_month) or
+                (year == end_year and month <= end_month) or
+                (start_year < year < end_year)
+            )
+        elif start_year == end_year:
+            # Within the same year
+            return year == start_year and start_month <= month <= end_month
+        else:
+            # Wrap-around range (e.g., start_month=11, end_month=3)
+            return (year == start_year and month >= start_month) or \
+                   (year == end_year and month <= end_month)
+
     # Filter by state, year range, and month range
-    filtered_data = [row for row in data if start_year <= row[0] <= end_year and row[2] == state and start_month <= row[1] <= end_month]
+    filtered_data = [
+        row for row in data
+        if row[0] is not None and row[1] is not None and row[2] == state and is_in_date_range(row[0], row[1])
+    ]
 
     if not filtered_data:
         print(f"No data found for state {state} from month {start_month} to {end_month} and year {start_year} to {end_year}")
@@ -181,18 +199,36 @@ def calculate_stats_range_months_state(sheet, start_year, end_year, start_month,
 
     return stats, raw_data
 
+
 def calculate_stats_range_us_total(sheet, start_year, end_year, start_month, end_month, start_column):
     rows = list(sheet.iter_rows(values_only=True))
     data = rows[4:]  # Data starts on row 5
 
+    # Define a helper function to check month and year ranges correctly
+    def is_in_date_range(year, month):
+        if start_year < end_year:
+            # Standard range across multiple years
+            return start_year <= year <= end_year and (
+                (year == start_year and month >= start_month) or
+                (year == end_year and month <= end_month) or
+                (start_year < year < end_year)
+            )
+        elif start_year == end_year:
+            # Within the same year
+            return year == start_year and start_month <= month <= end_month
+        else:
+            # Wrap-around range (e.g., start_month=11, end_month=3)
+            return (year == start_year and month >= start_month) or \
+                   (year == end_year and month <= end_month)
+
     # Filter by US total, year range, and month range
     filtered_data = [
         row for row in data
-        if start_year <= row[0] <= end_year and row[2] == 'US' and start_month <= row[1] <= end_month
+        if row[0] is not None and row[1] is not None and row[2] == 'US' and is_in_date_range(row[0], row[1])
     ]
 
     if not filtered_data:
-        print(f"No data found for US total from month {start_month} to {end_month} and year {start_year} to {end_year}")
+        print(f"No data found for US total from month {start_month} {start_year} to {end_month} {end_year}")
         return None, None
 
     # Define the categories in the specified order
@@ -228,4 +264,5 @@ def calculate_stats_range_us_total(sheet, start_year, end_year, start_month, end
             }
 
     return stats, raw_data
+
 
