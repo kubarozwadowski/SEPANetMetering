@@ -2,7 +2,5 @@ matplotlib
 streamlit
 openpyxl
 pandas
-folium
 geopandas
 plotly
-streamlit-folium
