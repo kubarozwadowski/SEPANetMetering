@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import openpyxl
 import numpy as np
 import plotly.express as px
-import folium
-from streamlit_folium import folium_static
 import geopandas as gpd
 from openpyxl import load_workbook
 from monthly import calculate_stats_month, calculate_stats_uptomonth, calculate_stats_uptomonth_state, calculate_stats_range_months_state, calculate_stats_range_us_total
