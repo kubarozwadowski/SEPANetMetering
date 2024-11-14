@@ -301,7 +301,8 @@ if function and submit_button:
 
                 # Display the data as a table
                 st.write("## Tabular Data")
-                st.table(df_plot)
+                st.dataframe(df_plot)
+                #st.table(df_plot)
 
         if function == "Calculate statistics by state for a range of months":
             start_column = categories_mapping[category][subcategory]
@@ -337,7 +338,7 @@ if function and submit_button:
                 df = pd.DataFrame(data)
                 category_order = ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']
                 df['Category'] = pd.Categorical(df['Category'], categories=category_order, ordered=True)
-                st.table(df)
+                st.dataframe(df)
 
         if function == "Calculate statistics for a range of months (US Total)":
             start_column = categories_mapping[category][subcategory]
@@ -361,7 +362,7 @@ if function and submit_button:
                 df = pd.DataFrame(data)
                 category_order = ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']
                 df['Category'] = pd.Categorical(df['Category'], categories=category_order, ordered=True)
-                st.table(df)
+                st.dataframe(df)
 
                 # Determine y-axis label based on subcategory
                 y_axis_label = 'Value'
@@ -402,7 +403,7 @@ if function and submit_button:
 
                 df_tabular = pd.DataFrame(tabular_data)
                 st.write("## Tabular Data for Graph")
-                st.table(df_tabular)
+                st.dataframe(df_tabular)
 
         if function == "Calculate statistics for a specific year (US Total)":
             result = technology_year(category, year)
@@ -430,7 +431,7 @@ if function and submit_button:
                                 f"{us_total_customers}"]
                     })
                     
-                    st.table(summary_df)
+                    st.dataframe(summary_df)
                     
                     # Create bar graphs for capacity and customers
                     detailed_df = pd.DataFrame(data['data'])
@@ -475,7 +476,7 @@ if function and submit_button:
                     
                     summary_df = pd.DataFrame(summary_data)
                     
-                    st.table(summary_df)
+                    st.dataframe(summary_df)
                     
                     # Prepare data for trend graph
                     yearly_data = [item for item in data['data'] if item['state'] == 'US']
@@ -516,7 +517,7 @@ if function and submit_button:
                         'Value': [f"{current_capacity} MW", f"{current_customers}"]
                     })
                     
-                    st.table(summary_df)
+                    st.dataframe(summary_df)
                     
                     # Create bar graphs for capacity and customers
                     detailed_df = pd.DataFrame(data['data'])
@@ -561,7 +562,7 @@ if function and submit_button:
 
                     summary_df = pd.DataFrame(summary_data)
 
-                    st.table(summary_df)
+                    st.dataframe(summary_df)
 
                     # Prepare data for trend graph
                     yearly_data = [item for item in data['data'] if item['state'] == state]
