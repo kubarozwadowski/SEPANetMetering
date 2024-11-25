@@ -15,37 +15,43 @@ def calculate_stats_month(sheet, year, month, start_column):
     data = rows[4:]  # Data starts on row 5
 
     # Filter by year, month, and state 'US'
-    filtered_data = [row for row in data if row[0] == year and row[1] == month and row[2] == 'US']
+    filtered_data_us = [row for row in data if row[0] == year and row[1] == month and row[2] == 'US']
+    filtered_data_states = [row for row in data if row[0] == year and row[1] == month and row[2] != 'US']
 
-    if not filtered_data:
-        print(f"No data found for year {year}, month {month}, and state 'US'")
+    if not filtered_data_us and not filtered_data_states:
+        print(f"No data found for year {year}, month {month}")
         return None, None
 
     # Define the categories in the specified order
     categories = ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']
     start_idx = col_to_index(start_column) - 1  # Convert column letter to index (0-based)
     
-    stats = {}
-    raw_data = []
+    stats_us = {}
+    stats_states = []
 
+    # Process US data
     for idx, category in enumerate(categories):
         column_index = start_idx + idx
-        valid_entries = [(row[2], row[column_index]) for row in filtered_data if row[column_index] is not None]
-        valid_entries = [(state, value) for state, value in valid_entries if is_valid_integer(value)]
+        valid_entries_us = [(row[2], row[column_index]) for row in filtered_data_us if row[column_index] is not None]
+        valid_entries_us = [(state, value) for state, value in valid_entries_us if is_valid_integer(value)]
         
-        if valid_entries:
-            us_value = next((value for state, value in valid_entries if state == 'US'), None)
+        if valid_entries_us:
+            us_value = next((value for state, value in valid_entries_us if state == 'US'), None)
             if us_value is not None:
-                stats[category] = {
-                    'us_value': us_value
-                }
-            raw_data.extend([{'state': state, 'category': category, 'value': value} for state, value in valid_entries])
+                stats_us[category] = us_value
         else:
-            stats[category] = {
-                'us_value': None
-            }
+            stats_us[category] = None
 
-    return stats, raw_data
+    # Process state data
+    for idx, category in enumerate(categories):
+        column_index = start_idx + idx
+        valid_entries_states = [(row[2], row[column_index]) for row in filtered_data_states if row[column_index] is not None]
+        valid_entries_states = [(state, value) for state, value in valid_entries_states if is_valid_integer(value)]
+        
+        if valid_entries_states:
+            stats_states.extend([{'state': state, 'category': category, 'value': value} for state, value in valid_entries_states])
+
+    return stats_us, stats_states
 
 def calculate_stats_uptomonth_state(sheet, month, state, start_column):
     rows = list(sheet.iter_rows(values_only=True))

@@ -84,7 +84,7 @@ function_mapping = {
 infolink = "https://www.eia.gov/electricity/data/eia861m/#:~:text=Description%3A%20The,established%20imputation%20procedures."
 faq = "https://www.eia.gov/survey/form/eia_861m/faqs.php"
 st.logo("SEPALogo.png")
-st.title("EIA-861M Net Metering Data")
+st.title("US Net Metering Atlas")
 st.subheader("Interactive Analysis of Monthly Net Metering Data Across Various Technologies and States")
 
 st.write("""
@@ -249,14 +249,14 @@ if function and submit_button:
         if function == "Calculate statistics for a specific month (US Total)":
             month_num = month_mapping[report_month_str]
             start_column = categories_mapping[category][subcategory]
-            stats, raw_data = calculate_stats_month(monthly_totals_states, year, month_num, start_column)
-            
-            if stats:
+            stats_us, raw_data = calculate_stats_month(monthly_totals_states, year, month_num, start_column)
+
+            if stats_us:
                 st.write(f"## Statistics for {year} - {report_month_str}")
 
                 # Prepare data for plotting
                 plot_data = {
-                    'State': ['US'],
+                    'State': [],
                     'Residential': [],
                     'Commercial': [],
                     'Industrial': [],
@@ -264,10 +264,25 @@ if function and submit_button:
                     'Total': []
                 }
 
-                for category, values in stats.items():
-                    plot_data[category].append(values['us_value'])
+                for state_data in raw_data:
+                    state = state_data['state']
+                    category = state_data['category']
+                    value = state_data['value']
+                    
+                    if state not in plot_data['State']:
+                        plot_data['State'].append(state)
+                        for cat in ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']:
+                            plot_data[cat].append(0)
+
+                    state_index = plot_data['State'].index(state)
+                    plot_data[category][state_index] = value
 
                 df_plot = pd.DataFrame(plot_data)
+                df_plot = df_plot.applymap(lambda x: 0 if isinstance(x, (int, float)) and abs(x) < 1e-5 else x)
+                df_plot['Transportation'] = df_plot['Transportation'] + 1e-5
+
+
+
 
                 # Plot the data
                 fig = go.Figure()
@@ -285,6 +300,7 @@ if function and submit_button:
                         title='Capacity (MW)',
                         titlefont_size=16,
                         tickfont_size=14,
+                        range=[0, None]  # Set the y-axis to start at 0
                     ),
                     legend=dict(
                         x=0,
@@ -297,12 +313,61 @@ if function and submit_button:
                     bargroupgap=0.1
                 )
 
+
                 st.plotly_chart(fig)
 
                 # Display the data as a table
                 st.write("## Tabular Data")
                 st.dataframe(df_plot)
-                #st.table(df_plot)
+                # st.table(df_plot)
+
+                state_abbreviation_mapping = {
+                    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+                    "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+                    "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+                    "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+                    "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+                    "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+                    "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+                    "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+                    "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+                    "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming"
+                }
+
+                # Plot choropleth maps for each sector
+                st.write("## Choropleth Maps of State Data by Sector")
+                if raw_data:
+                    us_states = gpd.read_file('https://raw.githubusercontent.com/python-visualization/folium/master/examples/data/us-states.json')
+                    us_states = us_states.to_crs(epsg=4326)  # Set CRS to WGS84 (EPSG:4326)
+
+                    # Map state abbreviations to full names in raw_data
+                    for entry in raw_data:
+                        if entry['state'] in state_abbreviation_mapping:
+                            entry['state'] = state_abbreviation_mapping[entry['state']]
+
+                    alaska_geometry = us_states[us_states['name'] == 'Alaska']['geometry'].iloc[0] if 'Alaska' in us_states['name'].values else None
+                    if alaska_geometry is not None:
+                        us_states = pd.concat([us_states, gpd.GeoDataFrame([{'name': 'Alaska', 'geometry': alaska_geometry}], crs=us_states.crs)], ignore_index=True)
+
+                    for category in ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']:
+                        st.write(f"### {category} Energy Consumption by State")
+                        df_category = pd.DataFrame([data for data in raw_data if data['category'] == category])
+
+                        if not df_category.empty:
+                            # Merge the GeoDataFrame with your raw data based on state names
+                            gdf = us_states.merge(df_category, left_on='name', right_on='state', how='outer')
+                            gdf = gdf[gdf.is_valid]  # Filter only valid geometries
+
+                            # Plot the choropleth map
+                            fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+                            gdf.plot(column='value', ax=ax, legend=True,
+                                    legend_kwds={'label': f"{category} Energy Consumption by State",
+                                                'orientation': "horizontal"})
+                            plt.title(f"{category} Energy Consumption")
+                            st.pyplot(fig)
+
+
+
 
         if function == "Calculate statistics by state for a range of months":
             start_column = categories_mapping[category][subcategory]
