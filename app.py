@@ -19,7 +19,7 @@ import plotly.graph_objects as go
 wb = load_workbook('NetMeteringAll.xlsx')
 monthly_totals_states = wb['Sheet1']
 
-st.set_page_config(page_title="EIA Form Analysis", page_icon=":bar_chart:")
+st.set_page_config(page_title="US Net Metering Atlas", page_icon=":bar_chart:")
 
 
 categories_mapping = {
@@ -277,12 +277,17 @@ if function and submit_button:
                     state_index = plot_data['State'].index(state)
                     plot_data[category][state_index] = value
 
+                # Explicitly set all transportation values to zero
+                plot_data['Transportation'] = [0 for _ in plot_data['Transportation']]
+
+                # Create DataFrame from plot data
                 df_plot = pd.DataFrame(plot_data)
-                df_plot = df_plot.applymap(lambda x: 0 if isinstance(x, (int, float)) and abs(x) < 1e-5 else x)
-                df_plot['Transportation'] = df_plot['Transportation'] + 1e-5
 
+                # Debugging: Print Transportation column to verify the values
+                print("Debug - Transportation values:", df_plot['Transportation'])
 
-
+                # Convert any small floating-point values to zero explicitly
+                df_plot = df_plot.applymap(lambda x: 0 if isinstance(x, (int, float)) and abs(x) <= 1e-5 else x)
 
                 # Plot the data
                 fig = go.Figure()
@@ -313,14 +318,13 @@ if function and submit_button:
                     bargroupgap=0.1
                 )
 
-
                 st.plotly_chart(fig)
 
                 # Display the data as a table
                 st.write("## Tabular Data")
                 st.dataframe(df_plot)
-                # st.table(df_plot)
 
+                # Create a mapping of state abbreviations to full state names
                 state_abbreviation_mapping = {
                     "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
                     "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
@@ -349,7 +353,7 @@ if function and submit_button:
                     if alaska_geometry is not None:
                         us_states = pd.concat([us_states, gpd.GeoDataFrame([{'name': 'Alaska', 'geometry': alaska_geometry}], crs=us_states.crs)], ignore_index=True)
 
-                    for category in ['Residential', 'Commercial', 'Industrial', 'Transportation', 'Total']:
+                    for category in ['Residential', 'Commercial', 'Industrial', 'Total']:
                         st.write(f"### {category} Energy Consumption by State")
                         df_category = pd.DataFrame([data for data in raw_data if data['category'] == category])
 
@@ -357,14 +361,27 @@ if function and submit_button:
                             # Merge the GeoDataFrame with your raw data based on state names
                             gdf = us_states.merge(df_category, left_on='name', right_on='state', how='outer')
                             gdf = gdf[gdf.is_valid]  # Filter only valid geometries
+                            gdf['value'] = pd.to_numeric(gdf['value'], errors='coerce').fillna(0).astype(float)
+
+                            # Ensure no negative values exist
+                            gdf['value'] = gdf['value'].apply(lambda x: 0 if x < 0 else x)
+
+                            #debugging ; printing
+                            # print("Debug - Merged GeoDataFrame:\n", gdf[['name', 'value']])
+
 
                             # Plot the choropleth map
                             fig, ax = plt.subplots(1, 1, figsize=(15, 10))
                             gdf.plot(column='value', ax=ax, legend=True,
+                                    cmap='coolwarm',  
                                     legend_kwds={'label': f"{category} Energy Consumption by State",
-                                                'orientation': "horizontal"})
+                                                'orientation': "horizontal"},
+                                    vmin=0)  # Set minimum value for the color scale to ensure consistent interpretation
                             plt.title(f"{category} Energy Consumption")
                             st.pyplot(fig)
+
+
+
 
 
 
