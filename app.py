@@ -354,7 +354,7 @@ if function and submit_button:
                         us_states = pd.concat([us_states, gpd.GeoDataFrame([{'name': 'Alaska', 'geometry': alaska_geometry}], crs=us_states.crs)], ignore_index=True)
 
                     for category in ['Residential', 'Commercial', 'Industrial', 'Total']:
-                        st.write(f"### {category} Energy Consumption by State")
+                        st.write(f"### {category} {subcategory} by State")
                         df_category = pd.DataFrame([data for data in raw_data if data['category'] == category])
 
                         if not df_category.empty:
@@ -371,13 +371,13 @@ if function and submit_button:
 
 
                             # Plot the choropleth map
-                            fig, ax = plt.subplots(1, 1, figsize=(15, 10))
+                            fig, ax = plt.subplots(1, 1, figsize=(20, 15))
                             gdf.plot(column='value', ax=ax, legend=True,
                                     cmap='coolwarm',  
-                                    legend_kwds={'label': f"{category} Energy Consumption by State",
+                                    legend_kwds={'label': f"{category} {subcategory} by State",
                                                 'orientation': "horizontal"},
-                                    vmin=0)  # Set minimum value for the color scale to ensure consistent interpretation
-                            plt.title(f"{category} Energy Consumption")
+                                    vmin=0, vmax=gdf['value'].max() * 1.1)  # Set minimum value for the color scale to ensure consistent interpretation
+                            plt.title(f"{category} {subcategory}")
                             st.pyplot(fig)
 
 
