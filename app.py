@@ -354,7 +354,7 @@ if function and submit_button:
                         if not df_category.empty:
                             # Merge the GeoDataFrame with your raw data based on state names
                             gdf = us_states.merge(df_category, left_on='name', right_on='state', how='outer')
-                            gdf = gdf[gdf.is_valid]  # Filter only valid geometries
+                            gdf.geometry = gdf.make_valid()  # Filter only valid geometries
                             gdf['value'] = pd.to_numeric(gdf['value'], errors='coerce').fillna(0).astype(float)
 
                             # Ensure no negative values exist
